@@ -11,7 +11,7 @@ PLATFORM := $(shell uname -s)
 $(info platform=$(PLATFORM))
 
 # file extensions
-ifeq ($(PLATFORM), Linux)
+ifeq ($(PLATFORM), Darwin)
   OBJ=.o
   EXE=.out
   DLL=.so
@@ -36,7 +36,7 @@ HEADERS=$(wildcard *.h)
 ALLDEPS=$(HEADERS) Makefile
 
 
-CFLAGS=-std=c++14 -Wall -Werror -Wconversion -Iinclude
+CFLAGS=-std=c++14 -Wall -Werror -Iinclude
 LFLAGS=
 
 ifdef DEBUG
