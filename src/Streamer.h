@@ -1,5 +1,6 @@
 #pragma once
 
+#include <inttypes.h>
 #include <vector>
 #include <algorithm>
 #include <iostream>
@@ -83,11 +84,25 @@ inline my_ofstream& operator<<(my_ofstream& os, const T& v)
 //
 
 
-// when saving a double to a file in text format, use the meximum possible precision
 inline my_ofstream& operator<<(my_ofstream& os, double v)
 {
-    os.m_of << std::scientific << std::setprecision(16) << v << separator;
+    union { double d; uint64_t u; } tmp;
+    tmp.d = v;
+    char c[17];
+    sprintf(c, "%llx", tmp.u);
+    c[16] = '\0';
+    os << c;
     return os;
+}
+
+inline my_ifstream& operator>>(my_ifstream& is, double& v)
+{
+    union { double d; uint64_t u; } tmp;
+    std::string str;
+    is >> str;
+    sscanf(str.c_str(), "%" SCNx64, &tmp.u);
+    v = tmp.d;
+    return is;
 }
 
 
