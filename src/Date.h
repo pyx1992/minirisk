@@ -47,6 +47,10 @@ struct Date {
           days_ytd_leap[month - 1] : days_ytd[month - 1]) + day - 1;
   }
 
+  void init(unsigned serial) {
+    m_serial = serial;
+  }
+
   static bool is_valid_date(unsigned y, unsigned m, unsigned d);
 
   static void check_valid(unsigned y, unsigned m, unsigned d);
@@ -79,7 +83,7 @@ struct Date {
     return pretty
       ? std::to_string((int)m_d) + "-" + std::to_string((int)m_m) + "-"
       + std::to_string(m_y)
-      : std::to_string(m_y) + padding_dates((int)m_m) + padding_dates((int)m_d);
+      : std::to_string(m_serial);
   }
 
  private:
