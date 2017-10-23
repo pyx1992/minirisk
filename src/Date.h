@@ -31,7 +31,9 @@ struct Date {
 
  public:
   // Default constructor
-  Date() : m_serial(0), m_is_leap(false) {}
+  Date() : m_serial(0) {}
+
+  Date(unsigned serial) : m_serial(serial) {}
 
   // Constructor where the input value is checked.
   Date(unsigned year, unsigned month, unsigned day) {
@@ -40,10 +42,9 @@ struct Date {
 
   void init(unsigned year, unsigned month, unsigned day) {
     check_valid(year, month, day);
-    m_is_leap = is_leap_year(year);
     m_serial = days_epoch[year - 1900]
-      + (m_is_leap ? days_ytd_leap[month - 1] : days_ytd[month - 1])
-      + day - 1;
+      + (is_leap_year(year) ?
+          days_ytd_leap[month - 1] : days_ytd[month - 1]) + day - 1;
   }
 
   static bool is_valid_date(unsigned y, unsigned m, unsigned d);
@@ -83,7 +84,6 @@ struct Date {
 
  private:
   unsigned int m_serial;
-  bool m_is_leap;
 };
 
 long operator-(const Date& d1, const Date& d2);

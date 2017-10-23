@@ -59,11 +59,12 @@ void Date::to_y_m_d(unsigned *y, unsigned *m, unsigned *d) const {
   --y_it;
   *y = y_it - days_epoch.begin() + 1900;
   days_left -= *y_it;
-  auto m_it = m_is_leap
+  bool is_leap = is_leap_year(*y);
+  auto m_it = is_leap
     ? std::upper_bound(days_ytd_leap.begin(), days_ytd_leap.end(), days_left)
     : std::upper_bound(days_ytd.begin(), days_ytd.end(), days_left);
   --m_it;
-  *m = m_it - (m_is_leap ? days_ytd_leap.begin() : days_ytd.begin()) + 1;
+  *m = m_it - (is_leap ? days_ytd_leap.begin() : days_ytd.begin()) + 1;
   days_left -= *m_it;
   *d = days_left + 1;
 }
