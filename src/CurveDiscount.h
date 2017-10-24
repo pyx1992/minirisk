@@ -1,4 +1,7 @@
 #pragma once
+
+#include <vector>
+
 #include "ICurve.h"
 
 namespace minirisk {
@@ -11,14 +14,19 @@ struct CurveDiscount : ICurveDiscount
 
     CurveDiscount(Market *mkt, const Date& today, const string& curve_name);
 
+    void init_log_discounting_factors(Market *mkt);
+
     // compute the discount factor
     double df(const Date& t) const;
 
     virtual Date today() const { return m_today; }
 
+    int32_t convert_tenor_to_int(std::string& tenor) const;
+
 private:
-    Date   m_today;
+    Date m_today;
     string m_name;
+    std::vector<std::pair<double, double>> m_log_dfs;
     double m_rate;
 };
 
