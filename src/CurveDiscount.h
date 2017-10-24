@@ -21,9 +21,9 @@ struct CurveDiscount : ICurveDiscount
 
     virtual Date today() const { return m_today; }
 
+private:
     int32_t convert_tenor_to_int(std::string& tenor) const;
 
-private:
     Date m_today;
     string m_name;
     std::vector<std::pair<double, double>> m_log_dfs;

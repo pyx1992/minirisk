@@ -22,8 +22,8 @@ CurveDiscount::CurveDiscount(
 
 void CurveDiscount::init_log_discounting_factors(Market *mkt) {
   std::string ccy = m_name.substr(m_name.length() - 3);
-  std::string regex = ir_rate_prefix + "([0-9]+(D|W|M|Y)\\.)?" + ccy;
-  const auto matched = mkt->fetch_risk_factors(regex);
+  std::string regex = ir_rate_prefix + "[0-9]+(D|W|M|Y)\\." + ccy;
+  const auto& matched = mkt->fetch_risk_factors(regex);
   m_log_dfs.push_back(std::make_pair(0.0, 0.0));
   std::vector<std::pair<int32_t, double>> tenor_rates;
   for (const auto& rate : matched) {
@@ -40,8 +40,9 @@ void CurveDiscount::init_log_discounting_factors(Market *mkt) {
     m_log_dfs.push_back(std::make_pair(tf, df));
   }
 
+  // Init from yield.
   if (tenor_rates.empty()) {
-    m_rate = mkt->get_yield(m_name);
+    m_rate = mkt->get_yield(ccy);
   }
 }
 
