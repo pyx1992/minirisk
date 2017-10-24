@@ -43,6 +43,8 @@ void CurveDiscount::init_log_discounting_factors(Market *mkt) {
   // Init from yield.
   if (tenor_rates.empty()) {
     m_rate = mkt->get_yield(ccy);
+  } else {
+    m_last_tenor_date = m_today + tenor_rates.back().first;
   }
 }
 
@@ -70,7 +72,8 @@ int32_t CurveDiscount::convert_tenor_to_int(std::string& tenor) const {
 
 double CurveDiscount::df(const Date& t) const {
   MYASSERT((!(t < m_today)), 
-      "cannot get discount factor for date in the past: " << t);
+      "Curve " << m_name << ", DF not available before anchor date " << m_today 
+      << ", requested " << t);
   double dt = time_frac(m_today, t);
 
   // Use yield.
@@ -86,7 +89,8 @@ double CurveDiscount::df(const Date& t) const {
       return std::exp(m_log_dfs.back().second);
     }
     MYASSERT(false, 
-        "cannot get discount factor for date beyond furthest tenor: " << t);
+        "Curve " << m_name << ", DF not available beyond last tenor date " 
+        << m_last_tenor_date << ", requested " << t);
   } else {
     const auto& t2_log_df = *it;
     const auto& t1_log_df = *(--it);

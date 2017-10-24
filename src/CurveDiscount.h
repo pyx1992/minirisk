@@ -25,6 +25,7 @@ private:
     int32_t convert_tenor_to_int(std::string& tenor) const;
 
     Date m_today;
+    Date m_last_tenor_date;
     string m_name;
     std::vector<std::pair<double, double>> m_log_dfs;
     double m_rate;
