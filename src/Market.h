@@ -5,6 +5,7 @@
 #include "ICurve.h"
 #include "MarketDataServer.h"
 #include <vector>
+#include <set>
 #include <regex>
 
 namespace minirisk {
@@ -37,7 +38,7 @@ public:
     // yield rate for currency name
     double get_yield(const string& name);
 
-    std::vector<std::pair<std::string, double>> get_rates(const string& regex);
+    vec_risk_factor_t fetch_risk_factors(const string& regex);
 
     // fx exchange rate to convert 1 unit of ccy1 into USD
     double get_fx_spot(const string& ccy);
@@ -70,6 +71,7 @@ private:
 
     // raw risk factors
     std::map<string, double> m_risk_factors;
+    std::set<std::string> m_fetched_regex;
 };
 
 } // namespace minirisk

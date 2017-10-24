@@ -37,13 +37,15 @@ double Market::get_yield(const string& ccyname)
     return from_mds("yield curve", name);
 };
 
-std::vector<std::pair<std::string, double>> Market::get_rates(
-    const string& regex) {
+Market::vec_risk_factor_t Market::fetch_risk_factors(const string& regex) {
+  if (m_fetched_regex.find(regex) != m_fetched_regex.end())
+    return get_risk_factors(regex);
   auto rate_names = m_mds->match(regex);
   std::vector<std::pair<std::string, double>> rates;
   for (const auto& name : rate_names) {
     rates.push_back(std::make_pair(name, from_mds("curve rate", name)));
   }
+  m_fetched_regex.insert(regex);
   return rates;
 }
 
