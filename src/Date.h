@@ -67,6 +67,14 @@ struct Date {
     return d < (*this);
   }
 
+  Date operator+(const int number_of_days) const {
+    return Date(serial() + number_of_days);
+  }
+
+  Date operator-(const int number_of_days) const {
+    return Date(serial() - number_of_days);
+  }
+
   // number of days since 1-Jan-1900
   unsigned int serial() const {
     return m_serial;
