@@ -3,8 +3,33 @@
 #include "TradePayment.h"
 
 #include <numeric>
+#include <set>
 
 namespace minirisk {
+namespace {
+void bump_risk_factors(const double bump_size, 
+    std::vector<std::pair<std::string, double>>* bumped_up, 
+    std::vector<std::pair<std::string, double>>* bumped_dn) {
+  for (auto& p : *bumped_up) {
+    p.second += bump_size;
+  }
+  for (auto& p : *bumped_dn) {
+    p.second -= bump_size;
+  }
+}
+void find_all_risk_ccy(
+    const std::vector<std::pair<std::string, double>>& risk_factors, 
+    std::vector<std::string> *ccys) {
+  std::set<std::string> risk_ccys;
+  for (const auto& rf : risk_factors) {
+    std::string ccy = rf.first.substr(rf.first.length() - 3);
+    if (risk_ccys.find(ccy) == risk_ccys.end()) {
+      risk_ccys.insert(ccy);
+      ccys->push_back(ccy);
+    }
+  }
+}
+}
 
 void print_portfolio(const portfolio_t& portfolio)
 {
@@ -71,6 +96,71 @@ std::vector<std::pair<string, portfolio_values_t>> compute_pv01(const std::vecto
     return pv01;
 }
 
+std::vector<std::pair<std::string, portfolio_values_t>> compute_pv01_parallel(
+    const std::vector<ppricer_t>& pricers, const Market& mkt) {
+  std::vector<std::pair<std::string, portfolio_values_t>> pv01;
+  const double bump_size = 0.01 / 100;
+  const double dr = 2.0 * bump_size;
+  auto risk_factors = mkt.get_risk_factors(
+      ir_rate_prefix + "([0-9]+(D|W|M|Y)\\.)?[A-Z]{3}");
+  std::vector<std::string> risk_ccys;
+  find_all_risk_ccy(risk_factors, &risk_ccys);
+  Market tmpmkt(mkt);
+
+  for (const auto& risk_ccy : risk_ccys) {
+    auto base = mkt.get_risk_factors(
+        ir_rate_prefix + "([0-9]+(D|W|M|Y)\\.)?" + risk_ccy);
+    std::vector<std::pair<std::string, double>> bumped_up(base);
+    std::vector<std::pair<std::string, double>> bumped_dn(base);
+    bump_risk_factors(bump_size, &bumped_up, &bumped_dn);
+    tmpmkt.set_risk_factors(bumped_up);
+    auto pv_up = compute_prices(pricers, tmpmkt);
+    tmpmkt.set_risk_factors(bumped_dn);
+    auto pv_dn = compute_prices(pricers, tmpmkt);
+    pv01.push_back(
+        std::make_pair(
+          "parallel " + ir_rate_prefix + risk_ccy, 
+          std::vector<double>(pricers.size())));
+    std::transform(
+        pv_up.begin(), pv_up.end(), pv_dn.begin(), pv01.back().second.begin(),
+        [dr](double hi, double lo) -> double { return (hi - lo) / dr; });
+  }
+  return pv01;
+}
+
+std::vector<std::pair<std::string, portfolio_values_t>> compute_pv01_bucketed(
+    const std::vector<ppricer_t>& pricers, const Market& mkt) {
+  std::vector<std::pair<std::string, portfolio_values_t>> pv01;
+  const double bump_size = 0.01 / 100;
+  const double dr = 2.0 * bump_size;
+  std::set<std::string> buckets; 
+  Market tmpmkt(mkt);
+  auto base = mkt.get_risk_factors(
+      ir_rate_prefix + "[0-9]+(D|W|M|Y)\\.[A-Z]{3}");
+  for (auto& rf : base) {
+    auto original_value = rf.second;
+    const auto& bucket = rf.first;
+
+    rf.second = original_value + bump_size;
+    std::vector<std::pair<std::string, double>> bumped_up(base);
+    rf.second = original_value - bump_size;
+    std::vector<std::pair<std::string, double>> bumped_dn(base);
+    rf.second = original_value;
+
+    tmpmkt.set_risk_factors(bumped_up);
+    auto pv_up = compute_prices(pricers, tmpmkt);
+    tmpmkt.set_risk_factors(bumped_dn);
+    auto pv_dn = compute_prices(pricers, tmpmkt);
+
+    pv01.push_back(
+        std::make_pair(
+          "bucketed " + bucket, std::vector<double>(pricers.size())));
+    std::transform(
+        pv_up.begin(), pv_up.end(), pv_dn.begin(), pv01.back().second.begin(),
+        [dr](double hi, double lo) -> double { return (hi - lo) / dr; });
+  }
+  return pv01;
+}
 
 ptrade_t load_trade(my_ifstream& is)
 {
