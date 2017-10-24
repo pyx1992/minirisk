@@ -48,7 +48,17 @@ void run(const string& portfolio_file, const string& risk_factors_file)
     }
 
     {   // Compute PV01 (i.e. sensitivity with respect to interest rate dV/dr)
-        std::vector<std::pair<string, portfolio_values_t>> pv01(compute_pv01(pricers,mkt));  // PV01 per trade
+        std::vector<std::pair<string, portfolio_values_t>> pv01(
+            compute_pv01_bucketed(pricers,mkt));  // PV01 per trade
+
+        // display PV01 per currency
+        for (const auto& g : pv01)
+            print_price_vector("PV01 " + g.first, g.second);
+    }
+
+    {   // Compute PV01 (i.e. sensitivity with respect to interest rate dV/dr)
+        std::vector<std::pair<string, portfolio_values_t>> pv01(
+            compute_pv01_parallel(pricers,mkt));  // PV01 per trade
 
         // display PV01 per currency
         for (const auto& g : pv01)
