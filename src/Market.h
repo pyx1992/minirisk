@@ -35,10 +35,12 @@ public:
     const ptr_disc_curve_t get_discount_curve(const string& name);
 
     // yield rate for currency name
-    const double get_yield(const string& name);
+    double get_yield(const string& name);
+
+    std::vector<std::pair<std::string, double>> get_rates(const string& regex);
 
     // fx exchange rate to convert 1 unit of ccy1 into USD
-    const double get_fx_spot(const string& ccy);
+    double get_fx_spot(const string& ccy);
 
     // after the market has been disconnected, it is no more possible to fetch
     // new data points from the market data server

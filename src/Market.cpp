@@ -31,13 +31,23 @@ double Market::from_mds(const string& objtype, const string& name)
     return ins.first->second;
 }
 
-const double Market::get_yield(const string& ccyname)
+double Market::get_yield(const string& ccyname)
 {
     string name(ir_rate_prefix + ccyname);
     return from_mds("yield curve", name);
 };
 
-const double Market::get_fx_spot(const string& name)
+std::vector<std::pair<std::string, double>> Market::get_rates(
+    const string& regex) {
+  auto rate_names = m_mds->match(regex);
+  std::vector<std::pair<std::string, double>> rates;
+  for (const auto& name : rate_names) {
+    rates.push_back(std::make_pair(name, from_mds("curve rate", name)));
+  }
+  return rates;
+}
+
+double Market::get_fx_spot(const string& name)
 {
     return from_mds("fx spot", mds_spot_name(name));
 }
