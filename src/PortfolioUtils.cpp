@@ -175,15 +175,15 @@ std::vector<std::pair<std::string, portfolio_values_t>> compute_pv01_bucketed(
     const auto& bucket = rf.first;
 
     rf.second = original_value + bump_size;
-    std::vector<std::pair<std::string, double>> bumped_up(base);
-    rf.second = original_value - bump_size;
-    std::vector<std::pair<std::string, double>> bumped_dn(base);
-    rf.second = original_value;
-
-    tmpmkt.set_risk_factors(bumped_up);
+    tmpmkt.set_risk_factors(base);
     auto pv_up = compute_prices(pricers, tmpmkt);
-    tmpmkt.set_risk_factors(bumped_dn);
+
+    rf.second = original_value - bump_size;
+    tmpmkt.set_risk_factors(base);
     auto pv_dn = compute_prices(pricers, tmpmkt);
+
+    // Revert changes.
+    rf.second = original_value;
 
     pv01.push_back(
         std::make_pair(
