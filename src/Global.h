@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <string>
+#include <numeric>
 
 using std::string;
 using std::size_t;
@@ -20,6 +21,11 @@ inline string ir_curve_discount_name(const string& ccy)
 inline string fx_spot_name(const string& ccy1, const string& ccy2)
 {
     return fx_spot_prefix + ccy1 + "." + ccy2;
+}
+
+template<class T>
+T nan() {
+  return std::numeric_limits<T>::quiet_NaN();
 }
 
 string format_label(const string& s);

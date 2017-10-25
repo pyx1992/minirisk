@@ -3,7 +3,6 @@
 #include "TradePayment.h"
 
 #include <cmath>
-#include <numeric>
 #include <set>
 #include <exception>
 
@@ -31,11 +30,6 @@ void find_all_risk_ccy(
       ccys->push_back(ccy);
     }
   }
-}
-
-template<class T>
-T nan() {
-  return std::numeric_limits<T>::quiet_NaN();
 }
 
 trade_value_t pv01_or_nan(trade_value_t& hi, trade_value_t& lo, double dr) {
