@@ -41,17 +41,17 @@ trade_value_t pv01_or_nan(trade_value_t& hi, trade_value_t& lo, double dr) {
 }
 }
 
-void print_portfolio(const portfolio_t& portfolio)
-{
-    std::for_each(portfolio.begin(), portfolio.end(), [](auto& pt){ pt->print(std::cout); });
+void print_portfolio(const portfolio_t& portfolio) {
+  std::for_each(portfolio.begin(), portfolio.end(), [](auto& pt){ pt->print(std::cout); });
 }
 
-std::vector<ppricer_t> get_pricers(const portfolio_t& portfolio)
-{
-    std::vector<ppricer_t> pricers(portfolio.size());
-    std::transform( portfolio.begin(), portfolio.end(), pricers.begin()
-                  , [](auto &pt) -> ppricer_t { return pt->pricer(); } );
-    return pricers;
+std::vector<ppricer_t> get_pricers(
+    const portfolio_t& portfolio, const std::string& base_ccy) {
+  std::vector<ppricer_t> pricers(portfolio.size());
+  std::transform(
+      portfolio.begin(), portfolio.end(), pricers.begin(), 
+      [base_ccy](auto &pt) -> ppricer_t { return pt->pricer(base_ccy); } );
+  return pricers;
 }
 
 portfolio_values_t compute_prices(const std::vector<ppricer_t>& pricers, Market& mkt)

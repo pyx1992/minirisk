@@ -13,7 +13,8 @@ typedef std::pair<double, std::string> trade_value_t;
 typedef std::vector<trade_value_t> portfolio_values_t;
 
 // get pricer for each trade
-std::vector<ppricer_t> get_pricers(const portfolio_t& portfolio);
+std::vector<ppricer_t> get_pricers(
+    const portfolio_t& portfolio, const std::string& base_ccy);
 
 // compute prices
 portfolio_values_t compute_prices(const std::vector<ppricer_t>& pricers, Market& mkt);

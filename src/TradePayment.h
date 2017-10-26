@@ -20,7 +20,7 @@ struct TradePayment : Trade<TradePayment>
         m_delivery_date = delivery_date;
     }
 
-    virtual ppricer_t pricer() const;
+    virtual ppricer_t pricer(const std::string& base_ccy) const;
 
     const string& ccy() const
     {

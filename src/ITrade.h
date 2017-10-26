@@ -31,7 +31,7 @@ struct ITrade : IObject
     virtual void print(std::ostream& os) const = 0;
 
     // Get pricer
-    virtual ppricer_t pricer() const = 0;
+    virtual ppricer_t pricer(const std::string& base_ccy) const = 0;
 };
 
 typedef std::shared_ptr<ITrade> ptrade_t;

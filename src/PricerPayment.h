@@ -7,7 +7,7 @@ namespace minirisk {
 
 struct PricerPayment : IPricer
 {
-    PricerPayment(const TradePayment& trd);
+    PricerPayment(const TradePayment& trd, const std::string& base_ccy);
 
     virtual double price(Market& m) const;
 
