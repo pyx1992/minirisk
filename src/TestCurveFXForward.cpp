@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "Global.h"
 #include "CurveFXForward.h"
 #include "MarketDataServer.h"
 #include "PortfolioUtils.h"
@@ -17,9 +18,10 @@ void run(const string& risk_factors_file) {
     {"EUR", "USD"}, {"USD", "EUR"}, {"GBP", "USD"}, {"USD", "GBP"}, 
     {"JPY", "USD"}, {"USD", "JPY"}, {"EUR", "JPY"}, {"GBP", "JPY"}};
   for (const auto& test_case : test_cases) {
-    CurveFXForward fwd(&mkt, today, test_case.first, test_case.second);
-    std::cout << fwd.name() << " "<< test_case.first << test_case.second << ": " 
-      << fwd.fwd(today + 365) << std::endl;
+    const auto fwd = mkt.get_fx_fwd_curve(
+        fx_fwd_prefix + test_case.first + "." + test_case.second);
+    std::cout << fwd->name() << " "<< test_case.first << test_case.second 
+      << ": " << fwd->fwd(today + 365) << std::endl;
   }
 }
 

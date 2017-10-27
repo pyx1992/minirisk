@@ -1,6 +1,7 @@
 #include "Market.h"
 #include "CurveDiscount.h"
 #include "CurveFXSpot.h"
+#include "CurveFXForward.h"
 
 #include <cmath>
 #include <vector>
@@ -8,14 +9,15 @@
 namespace minirisk {
 
 template <typename I, typename T>
-std::shared_ptr<const I> Market::get_curve(const string& name)
-{
-    ptr_curve_t& curve_ptr = m_curves[name];
-    if (!curve_ptr.get())
-        curve_ptr.reset(new T(this, m_today, name));
-    std::shared_ptr<const I> res = std::dynamic_pointer_cast<const I>(curve_ptr);
-    MYASSERT(res, "Cannot cast object with name " << name << " to type " << typeid(I).name());
-    return res;
+std::shared_ptr<const I> Market::get_curve(const string& name) {
+  ptr_curve_t& curve_ptr = m_curves[name];
+  if (!curve_ptr.get())
+      curve_ptr.reset(new T(this, m_today, name));
+  std::shared_ptr<const I> res = 
+    std::dynamic_pointer_cast<const I>(curve_ptr);
+  MYASSERT(res, "Cannot cast object with name " << name << " to type " 
+      << typeid(I).name());
+  return res;
 }
 
 const ptr_disc_curve_t Market::get_discount_curve(const string& name) {
@@ -26,18 +28,22 @@ const ptr_fx_spot_curve_t Market::get_fx_spot_curve(const string& name) {
   return get_curve<ICurveFXSpot, CurveFXSpot>(name);
 }
 
+const ptr_fx_fwd_curve_t Market::get_fx_fwd_curve(const string& name) {
+  return get_curve<ICurveFXForward, CurveFXForward>(name);
+}
+
 double Market::from_mds(const string& objtype, const string& name) {
-    auto ins = m_risk_factors.emplace(name, nan<double>());
-    if (ins.second) { // just inserted, need to be populated
-        MYASSERT(m_mds, "Cannot fetch " << objtype << " " << name 
-            << " because the market data server has been disconnnected");
-        if (objtype == "fx spot" && !m_mds->lookup(name).second) {
-          ins.first->second = m_mds->get(mds_spot_name(name));
-        } else {
-          ins.first->second = m_mds->get(name);
-        }
-    }
-    return ins.first->second;
+  auto ins = m_risk_factors.emplace(name, nan<double>());
+  if (ins.second) { // just inserted, need to be populated
+      MYASSERT(m_mds, "Cannot fetch " << objtype << " " << name 
+          << " because the market data server has been disconnnected");
+      if (objtype == "fx spot" && !m_mds->lookup(name).second) {
+        ins.first->second = m_mds->get(mds_spot_name(name));
+      } else {
+        ins.first->second = m_mds->get(name);
+      }
+  }
+  return ins.first->second;
 }
 
 double Market::get_yield(const string& ccyname)
@@ -72,24 +78,24 @@ double Market::get_fx_spot(const std::string& base, const std::string& quote) {
   return rate;
 }
 
-void Market::set_risk_factors(const vec_risk_factor_t& risk_factors)
-{
-    clear();
-    for (const auto& d : risk_factors) {
-        auto i = m_risk_factors.find(d.first);
-        MYASSERT((i != m_risk_factors.end()), "Risk factor not found " << d.first);
-        i->second = d.second;
-    }
+void Market::set_risk_factors(const vec_risk_factor_t& risk_factors) {
+  clear();
+  for (const auto& d : risk_factors) {
+      auto i = m_risk_factors.find(d.first);
+      MYASSERT((i != m_risk_factors.end()), "Risk factor not found " 
+          << d.first);
+      i->second = d.second;
+  }
 }
 
-Market::vec_risk_factor_t Market::get_risk_factors(const std::string& expr) const
-{
-    vec_risk_factor_t result;
-    std::regex r(expr);
-    for (const auto& d : m_risk_factors)
-        if (std::regex_match(d.first, r))
-            result.push_back(d);
-    return result;
+Market::vec_risk_factor_t Market::get_risk_factors(
+    const std::string& expr) const {
+  vec_risk_factor_t result;
+  std::regex r(expr);
+  for (const auto& d : m_risk_factors)
+      if (std::regex_match(d.first, r))
+          result.push_back(d);
+  return result;
 }
 
 void Market::construct_fx_spot_rate_matrix() {
@@ -125,9 +131,19 @@ void Market::construct_fx_spot_rate_matrix() {
 
 std::pair<std::string, std::string> Market::fx_spot_name_to_ccy_pair(
     const std::string& name) {
-  const auto base = name.substr(8, 3);
+  const auto base = name.substr(fx_spot_prefix.length(), 3);
   const auto quote = 
-    name.length() == 15 ? name.substr(12) : "USD";
+    name.length() == fx_spot_prefix.length() + 7 ? 
+    name.substr(fx_spot_prefix.length() + 4) : "USD";
+  return {base, quote};
+}
+
+std::pair<std::string, std::string> Market::fx_fwd_name_to_ccy_pair(
+    const std::string& name) {
+  const auto base = name.substr(fx_fwd_prefix.length(), 3);
+  const auto quote = 
+    name.length() == fx_fwd_prefix.length() + 7 ?
+    name.substr(fx_fwd_prefix.length() + 4) : "USD";
   return {base, quote};
 }
 

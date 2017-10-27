@@ -37,6 +37,8 @@ public:
 
     const ptr_fx_spot_curve_t get_fx_spot_curve(const string& name);
 
+    const ptr_fx_fwd_curve_t get_fx_fwd_curve(const string& name);
+
     // yield rate for currency name
     double get_yield(const string& name);
 
@@ -70,6 +72,9 @@ public:
 
     std::pair<std::string, std::string> fx_spot_name_to_ccy_pair(
         const std::string& name);
+
+    std::pair<std::string, std::string> fx_fwd_name_to_ccy_pair(
+        const std::string&name);
 
 private:
     Date m_today;
