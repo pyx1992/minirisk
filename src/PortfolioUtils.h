@@ -4,6 +4,7 @@
 
 #include "ITrade.h"
 #include "IPricer.h"
+#include "FixingDataServer.h"
 
 namespace minirisk {
 
@@ -17,7 +18,11 @@ std::vector<ppricer_t> get_pricers(
     const portfolio_t& portfolio, const std::string& base_ccy);
 
 // compute prices
-portfolio_values_t compute_prices(const std::vector<ppricer_t>& pricers, Market& mkt);
+portfolio_values_t compute_prices(
+    const std::vector<ppricer_t>& pricers, Market& mkt);
+portfolio_values_t compute_prices(
+    const std::vector<ppricer_t>& pricers, Market& mkt,
+    const FixingDataServer* fds);
 
 // compute the cumulative book value
 std::pair<double, std::vector<std::pair<size_t, std::string>>> portfolio_total(

@@ -54,18 +54,24 @@ std::vector<ppricer_t> get_pricers(
   return pricers;
 }
 
-portfolio_values_t compute_prices(const std::vector<ppricer_t>& pricers, Market& mkt)
-{
-    portfolio_values_t prices;
-    for (const auto& pricer : pricers) {
-      try {
-        auto price = pricer->price(mkt);
-        prices.push_back(std::make_pair(price, ""));
-      } catch (std::exception& e) {
-        prices.push_back(std::make_pair(nan<double>(), e.what()));
-      }
+portfolio_values_t compute_prices(
+    const std::vector<ppricer_t>& pricers, Market& mkt, 
+    const FixingDataServer* fds) {
+  portfolio_values_t prices;
+  for (const auto& pricer : pricers) {
+    try {
+      auto price = pricer->price(mkt, fds);
+      prices.push_back(std::make_pair(price, ""));
+    } catch (std::exception& e) {
+      prices.push_back(std::make_pair(nan<double>(), e.what()));
     }
-    return prices;
+  }
+  return prices;
+}
+
+portfolio_values_t compute_prices(
+    const std::vector<ppricer_t>& pricers, Market& mkt) {
+  return compute_prices(pricers, mkt, nullptr);
 }
 
 std::pair<double, std::vector<std::pair<size_t, std::string>>> portfolio_total(

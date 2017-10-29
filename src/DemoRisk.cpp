@@ -25,8 +25,9 @@ void run(const string& portfolio_file, const string& risk_factors_file,
   // initialize market data server
   std::shared_ptr<const MarketDataServer> mds(
       new MarketDataServer(risk_factors_file));
-  // std::shared_ptr<const FixingDataServer> fds(
-  //    new FixingDataServer(fixing_path));
+  std::shared_ptr<const FixingDataServer> fds;
+  if (!fixing_path.empty())
+    fds.reset(new FixingDataServer(fixing_path));
 
   // Init market object
   Date today(2017,8,5);
