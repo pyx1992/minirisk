@@ -25,6 +25,10 @@ const std::array<unsigned, 12> Date::days_ytd_leap{
 const std::array<unsigned, Date::n_years> Date::days_epoch(
     static_cast<const std::array<unsigned, Date::n_years>&>(DateInitializer()));
 
+Date::Date(const std::string& yyyymmdd) 
+  : Date(std::stoul(yyyymmdd.substr(0, 4)), std::stoul(yyyymmdd.substr(4, 2)),
+      std::stoul(yyyymmdd.substr(6))) {}
+
 /* The function checks if a given year is a leap year.
     Leap year must be a multiple of 4, but it cannot be a multiple of 100 
     without also being a multiple of 400.

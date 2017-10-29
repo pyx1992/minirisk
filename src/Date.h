@@ -35,6 +35,8 @@ struct Date {
 
   Date(unsigned serial) : m_serial(serial) {}
 
+  Date(const std::string& yyyymmdd);
+
   // Constructor where the input value is checked.
   Date(unsigned year, unsigned month, unsigned day) {
     init(year, month, day);
