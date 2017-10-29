@@ -86,6 +86,7 @@ void Market::set_risk_factors(const vec_risk_factor_t& risk_factors) {
           << d.first);
       i->second = d.second;
   }
+  construct_fx_spot_rate_matrix();
 }
 
 Market::vec_risk_factor_t Market::get_risk_factors(

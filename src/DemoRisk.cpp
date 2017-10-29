@@ -25,8 +25,8 @@ void run(const string& portfolio_file, const string& risk_factors_file,
   // initialize market data server
   std::shared_ptr<const MarketDataServer> mds(
       new MarketDataServer(risk_factors_file));
-  std::shared_ptr<const FixingDataServer> fds(
-      new FixingDataServer(fixing_path));
+  // std::shared_ptr<const FixingDataServer> fds(
+  //    new FixingDataServer(fixing_path));
 
   // Init market object
   Date today(2017,8,5);
@@ -67,6 +67,14 @@ void run(const string& portfolio_file, const string& risk_factors_file,
       // display PV01 per currency
       for (const auto& g : pv01)
           print_price_vector("PV01 " + g.first, g.second);
+  }
+
+  {
+    // Compute fx delta
+    std::vector<std::pair<string, portfolio_values_t>> fx_delta(
+        compute_fx_delta(pricers, mkt));
+    for (const auto& g : fx_delta)
+      print_price_vector("FX DELTA " + g.first, g.second);
   }
 }
 

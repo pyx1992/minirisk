@@ -190,6 +190,39 @@ std::vector<std::pair<std::string, portfolio_values_t>> compute_pv01_bucketed(
   return pv01;
 }
 
+std::vector<std::pair<std::string, portfolio_values_t>> compute_fx_delta(
+     const std::vector<ppricer_t>& pricers, const Market& mkt) {
+  std::vector<std::pair<std::string, portfolio_values_t>> fx_delta;
+  const double bump_size = 0.1;
+  const double dr = 2.0 * bump_size;
+  auto fx_spots = mkt.get_risk_factors(fx_spot_prefix + "[A-Z]{3}");
+  std::vector<std::string> risk_ccys;
+  find_all_risk_ccy(fx_spots, &risk_ccys);
+  Market tmpmkt(mkt);
+
+  for (const auto& risk_ccy : risk_ccys) {
+    auto risk_factors = mkt.get_risk_factors(fx_spot_prefix + risk_ccy);
+    MYASSERT(risk_factors.size() == 1, 
+        "Duplicate fx spot rate." << fx_spot_prefix + risk_ccy);
+    const double original_value = risk_factors[0].second;
+    risk_factors[0].second = original_value + bump_size;
+    tmpmkt.set_risk_factors(risk_factors);
+    auto pv_up = compute_prices(pricers, tmpmkt);
+    risk_factors[0].second = original_value - bump_size;
+    tmpmkt.set_risk_factors(risk_factors);
+    auto pv_dn = compute_prices(pricers, tmpmkt);
+    fx_delta.push_back(
+        std::make_pair(fx_spot_prefix + risk_ccy,
+          std::vector<trade_value_t>(pricers.size())));
+
+    std::transform(
+        pv_up.begin(), pv_up.end(), pv_dn.begin(), 
+        fx_delta.back().second.begin(), [dr](auto& hi, auto& lo) ->
+        trade_value_t { return pv01_or_nan(hi, lo, dr); });
+  }
+  return fx_delta;
+}
+
 ptrade_t load_trade(my_ifstream& is)
 {
     string name;
