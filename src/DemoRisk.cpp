@@ -2,12 +2,13 @@
 #include <algorithm>
 
 #include "MarketDataServer.h"
+#include "FixingDataServer.h"
 #include "PortfolioUtils.h"
 
 using namespace::minirisk;
 
 void run(const string& portfolio_file, const string& risk_factors_file,
-    const string& base_ccy) {
+    const string& fixing_path, const string& base_ccy) {
   // load the portfolio from file
   portfolio_t portfolio = load_portfolio(portfolio_file);
   // save and reload portfolio to implicitly test round trip serialization
@@ -22,7 +23,10 @@ void run(const string& portfolio_file, const string& risk_factors_file,
   std::vector<ppricer_t> pricers(get_pricers(portfolio, base_ccy));
 
   // initialize market data server
-  std::shared_ptr<const MarketDataServer> mds(new MarketDataServer(risk_factors_file));
+  std::shared_ptr<const MarketDataServer> mds(
+      new MarketDataServer(risk_factors_file));
+  std::shared_ptr<const FixingDataServer> fds(
+      new FixingDataServer(fixing_path));
 
   // Init market object
   Date today(2017,8,5);
@@ -76,7 +80,7 @@ void usage() {
 
 int main(int argc, const char **argv) {
   // parse command line arguments
-  string portfolio, riskfactors, baseccy;
+  string portfolio, riskfactors, fixingpath, baseccy;
   if (argc % 2 == 0)
     usage();
   for (int i = 1; i < argc; i += 2) {
@@ -86,6 +90,8 @@ int main(int argc, const char **argv) {
       portfolio = value;
     else if (key == "-f")
       riskfactors = value;
+    else if (key == "-x")
+      fixingpath = value;
     else if (key == "-b")
       baseccy = value;
     else
@@ -97,7 +103,7 @@ int main(int argc, const char **argv) {
     baseccy = "USD";
 
   try {
-    run(portfolio, riskfactors, baseccy);
+    run(portfolio, riskfactors, fixingpath, baseccy);
     return 0;  // report success to the caller
   }
   catch (const std::exception& e) {
