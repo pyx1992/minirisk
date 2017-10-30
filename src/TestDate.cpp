@@ -29,7 +29,7 @@ void test1() {
 }
 
 void test2() {
-  std::ifstream mfile("all_dates.txt");
+  std::ifstream mfile("../data/all_dates.txt");
   if (mfile.is_open()) {
     unsigned y_i, m_i, d_i;
     unsigned y_o, m_o, d_o;
