@@ -61,12 +61,20 @@ struct Date {
     return m_serial < d.serial();
   }
 
+  bool operator<=(const Date& d) const {
+    return m_serial <= d.serial();
+  }
+
   bool operator==(const Date& d) const {
     return m_serial == d.serial();
   }
 
   bool operator>(const Date& d) const {
-    return d < (*this);
+    return m_serial > d.serial();
+  }
+
+  bool operator>=(const Date& d) const {
+    return m_serial >= d.serial();
   }
 
   Date operator+(const int number_of_days) const {
