@@ -199,8 +199,6 @@ std::vector<std::pair<std::string, portfolio_values_t>> compute_pv01_bucketed(
 std::vector<std::pair<std::string, portfolio_values_t>> compute_fx_delta(
      const std::vector<ppricer_t>& pricers, const Market& mkt) {
   std::vector<std::pair<std::string, portfolio_values_t>> fx_delta;
-  const double bump_size = 0.1;
-  const double dr = 2.0 * bump_size;
   auto fx_spots = mkt.get_risk_factors(fx_spot_prefix + "[A-Z]{3}");
   std::vector<std::string> risk_ccys;
   find_all_risk_ccy(fx_spots, &risk_ccys);
@@ -211,6 +209,8 @@ std::vector<std::pair<std::string, portfolio_values_t>> compute_fx_delta(
     MYASSERT(risk_factors.size() == 1, 
         "Duplicate fx spot rate." << fx_spot_prefix + risk_ccy);
     const double original_value = risk_factors[0].second;
+    double bump_size = original_value * 0.1 / 100;
+    double dr = 2 * bump_size;
     risk_factors[0].second = original_value + bump_size;
     tmpmkt.set_risk_factors(risk_factors);
     auto pv_up = compute_prices(pricers, tmpmkt);
