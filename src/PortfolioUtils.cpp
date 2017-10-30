@@ -1,6 +1,7 @@
 #include "Global.h"
 #include "PortfolioUtils.h"
 #include "TradePayment.h"
+#include "TradeFXForward.h"
 
 #include <cmath>
 #include <set>
@@ -56,22 +57,17 @@ std::vector<ppricer_t> get_pricers(
 
 portfolio_values_t compute_prices(
     const std::vector<ppricer_t>& pricers, Market& mkt, 
-    const FixingDataServer* fds) {
+    std::shared_ptr<const FixingDataServer> fds) {
   portfolio_values_t prices;
   for (const auto& pricer : pricers) {
     try {
-      auto price = pricer->price(mkt, fds);
+      auto price = pricer->price(mkt, fds.get());
       prices.push_back(std::make_pair(price, ""));
     } catch (std::exception& e) {
       prices.push_back(std::make_pair(nan<double>(), e.what()));
     }
   }
   return prices;
-}
-
-portfolio_values_t compute_prices(
-    const std::vector<ppricer_t>& pricers, Market& mkt) {
-  return compute_prices(pricers, mkt, nullptr);
 }
 
 std::pair<double, std::vector<std::pair<size_t, std::string>>> portfolio_total(
@@ -89,8 +85,9 @@ std::pair<double, std::vector<std::pair<size_t, std::string>>> portfolio_total(
   return std::make_pair(total, errors);
 }
 
-std::vector<std::pair<string, portfolio_values_t>> compute_pv01(const std::vector<ppricer_t>& pricers, const Market& mkt)
-{
+std::vector<std::pair<string, portfolio_values_t>> compute_pv01(
+    const std::vector<ppricer_t>& pricers, const Market& mkt,
+    std::shared_ptr<const FixingDataServer> fds) {
     std::vector<std::pair<string, portfolio_values_t>> pv01;  // PV01 per trade
 
     const double bump_size = 0.01 / 100;
@@ -112,12 +109,12 @@ std::vector<std::pair<string, portfolio_values_t>> compute_pv01(const std::vecto
         // bump down and price
         bumped[0].second = d.second - bump_size;
         tmpmkt.set_risk_factors(bumped);
-        auto pv_dn = compute_prices(pricers, tmpmkt);
+        auto pv_dn = compute_prices(pricers, tmpmkt, fds);
 
         // bump up and price
         bumped[0].second = d.second + bump_size; // bump up
         tmpmkt.set_risk_factors(bumped);
-        auto pv_up = compute_prices(pricers, tmpmkt);
+        auto pv_up = compute_prices(pricers, tmpmkt, fds);
 
         // compute estimator of the derivative via central finite differences
         double dr = 2.0 * bump_size;
@@ -129,7 +126,8 @@ std::vector<std::pair<string, portfolio_values_t>> compute_pv01(const std::vecto
 }
 
 std::vector<std::pair<std::string, portfolio_values_t>> compute_pv01_parallel(
-    const std::vector<ppricer_t>& pricers, const Market& mkt) {
+    const std::vector<ppricer_t>& pricers, const Market& mkt,
+    std::shared_ptr<const FixingDataServer> fds) {
   std::vector<std::pair<std::string, portfolio_values_t>> pv01;
   const double bump_size = 0.01 / 100;
   const double dr = 2.0 * bump_size;
@@ -146,9 +144,9 @@ std::vector<std::pair<std::string, portfolio_values_t>> compute_pv01_parallel(
     std::vector<std::pair<std::string, double>> bumped_dn(base);
     bump_risk_factors(bump_size, &bumped_up, &bumped_dn);
     tmpmkt.set_risk_factors(bumped_up);
-    auto pv_up = compute_prices(pricers, tmpmkt);
+    auto pv_up = compute_prices(pricers, tmpmkt, fds);
     tmpmkt.set_risk_factors(bumped_dn);
-    auto pv_dn = compute_prices(pricers, tmpmkt);
+    auto pv_dn = compute_prices(pricers, tmpmkt, fds);
     pv01.push_back(
         std::make_pair(
           "parallel " + ir_rate_prefix + risk_ccy, 
@@ -162,7 +160,8 @@ std::vector<std::pair<std::string, portfolio_values_t>> compute_pv01_parallel(
 }
 
 std::vector<std::pair<std::string, portfolio_values_t>> compute_pv01_bucketed(
-    const std::vector<ppricer_t>& pricers, const Market& mkt) {
+    const std::vector<ppricer_t>& pricers, const Market& mkt,
+    std::shared_ptr<const FixingDataServer> fds) {
   std::vector<std::pair<std::string, portfolio_values_t>> pv01;
   const double bump_size = 0.01 / 100;
   const double dr = 2.0 * bump_size;
@@ -176,11 +175,11 @@ std::vector<std::pair<std::string, portfolio_values_t>> compute_pv01_bucketed(
 
     rf.second = original_value + bump_size;
     tmpmkt.set_risk_factors(base);
-    auto pv_up = compute_prices(pricers, tmpmkt);
+    auto pv_up = compute_prices(pricers, tmpmkt, fds);
 
     rf.second = original_value - bump_size;
     tmpmkt.set_risk_factors(base);
-    auto pv_dn = compute_prices(pricers, tmpmkt);
+    auto pv_dn = compute_prices(pricers, tmpmkt, fds);
 
     // Revert changes.
     rf.second = original_value;
@@ -197,7 +196,8 @@ std::vector<std::pair<std::string, portfolio_values_t>> compute_pv01_bucketed(
 }
 
 std::vector<std::pair<std::string, portfolio_values_t>> compute_fx_delta(
-     const std::vector<ppricer_t>& pricers, const Market& mkt) {
+     const std::vector<ppricer_t>& pricers, const Market& mkt,
+     std::shared_ptr<const FixingDataServer> fds) {
   std::vector<std::pair<std::string, portfolio_values_t>> fx_delta;
   auto fx_spots = mkt.get_risk_factors(fx_spot_prefix + "[A-Z]{3}");
   std::vector<std::string> risk_ccys;
@@ -213,10 +213,10 @@ std::vector<std::pair<std::string, portfolio_values_t>> compute_fx_delta(
     double dr = 2 * bump_size;
     risk_factors[0].second = original_value + bump_size;
     tmpmkt.set_risk_factors(risk_factors);
-    auto pv_up = compute_prices(pricers, tmpmkt);
+    auto pv_up = compute_prices(pricers, tmpmkt, fds);
     risk_factors[0].second = original_value - bump_size;
     tmpmkt.set_risk_factors(risk_factors);
-    auto pv_dn = compute_prices(pricers, tmpmkt);
+    auto pv_dn = compute_prices(pricers, tmpmkt, fds);
     fx_delta.push_back(
         std::make_pair(fx_spot_prefix + risk_ccy,
           std::vector<trade_value_t>(pricers.size())));
@@ -229,23 +229,24 @@ std::vector<std::pair<std::string, portfolio_values_t>> compute_fx_delta(
   return fx_delta;
 }
 
-ptrade_t load_trade(my_ifstream& is)
-{
-    string name;
-    ptrade_t p;
+ptrade_t load_trade(my_ifstream& is) {
+  string name;
+  ptrade_t p;
 
-    // read trade identifier
-    guid_t id;
-    is >> id;
+  // read trade identifier
+  guid_t id;
+  is >> id;
 
-    if (id == TradePayment::m_id)
-        p.reset(new TradePayment);
-    else
-        THROW("Unknown trade type:" << id);
+  if (id == TradePayment::m_id)
+    p.reset(new TradePayment);
+  else if (id == TradeFXForward::m_id)
+    p.reset(new TradeFXForward);
+  else
+    THROW("Unknown trade type:" << id);
 
-    p->load(is);
+  p->load(is);
 
-    return p;
+  return p;
 }
 
 void save_portfolio(const string& filename, const std::vector<ptrade_t>& portfolio)

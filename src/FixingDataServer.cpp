@@ -22,10 +22,11 @@ FixingDataServer::FixingDataServer(const std::string& filename) {
 
 double FixingDataServer::get(const std::string& name, const Date& t) const {
   auto iter = m_data.find(name);
-  MYASSERT(iter != m_data.end(), "Fixing data not found: " << name);
+  MYASSERT(iter != m_data.end(), "Fixing not found: " << name << "," 
+      << t.to_string());
   auto date_iter = iter->second.find(t);
-  MYASSERT(date_iter != iter->second.end(), "Fixing date not found: " 
-      << name << " " << t.to_string());
+  MYASSERT(date_iter != iter->second.end(), "Fixing not found: " 
+      << name << "," << t.to_string());
   return date_iter->second;
 }
 

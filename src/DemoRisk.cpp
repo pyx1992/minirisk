@@ -36,7 +36,7 @@ void run(const string& portfolio_file, const string& risk_factors_file,
   // Price all products. Market objects are automatically constructed on demand,
   // fetching data as needed from the market data server.
   {
-      auto prices = compute_prices(pricers, mkt);
+      auto prices = compute_prices(pricers, mkt, fds);
       print_price_vector("PV", prices);
   }
 
@@ -54,7 +54,7 @@ void run(const string& portfolio_file, const string& risk_factors_file,
 
   {   // Compute PV01 (i.e. sensitivity with respect to interest rate dV/dr)
       std::vector<std::pair<string, portfolio_values_t>> pv01(
-          compute_pv01_bucketed(pricers,mkt));  // PV01 per trade
+          compute_pv01_bucketed(pricers, mkt, fds));  // PV01 per trade
 
       // display PV01 per currency
       for (const auto& g : pv01)
@@ -63,7 +63,7 @@ void run(const string& portfolio_file, const string& risk_factors_file,
 
   {   // Compute PV01 (i.e. sensitivity with respect to interest rate dV/dr)
       std::vector<std::pair<string, portfolio_values_t>> pv01(
-          compute_pv01_parallel(pricers,mkt));  // PV01 per trade
+          compute_pv01_parallel(pricers, mkt , fds));  // PV01 per trade
 
       // display PV01 per currency
       for (const auto& g : pv01)
@@ -73,7 +73,7 @@ void run(const string& portfolio_file, const string& risk_factors_file,
   {
     // Compute fx delta
     std::vector<std::pair<string, portfolio_values_t>> fx_delta(
-        compute_fx_delta(pricers, mkt));
+        compute_fx_delta(pricers, mkt, fds));
     for (const auto& g : fx_delta)
       print_price_vector("FX DELTA " + g.first, g.second);
   }
