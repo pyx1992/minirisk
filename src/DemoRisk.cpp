@@ -75,7 +75,7 @@ void run(const string& portfolio_file, const string& risk_factors_file,
     std::vector<std::pair<string, portfolio_values_t>> fx_delta(
         compute_fx_delta(pricers, mkt, fds));
     for (const auto& g : fx_delta)
-      print_price_vector("FX DELTA " + g.first, g.second);
+      print_price_vector("FX delta " + g.first, g.second);
   }
 }
 
