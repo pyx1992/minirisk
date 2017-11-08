@@ -147,6 +147,8 @@ std::vector<std::pair<std::string, portfolio_values_t>> compute_pv01_parallel(
     auto pv_up = compute_prices(pricers, tmpmkt, fds);
     tmpmkt.set_risk_factors(bumped_dn);
     auto pv_dn = compute_prices(pricers, tmpmkt, fds);
+    tmpmkt.set_risk_factors(base);
+
     pv01.push_back(
         std::make_pair(
           "parallel " + ir_rate_prefix + risk_ccy, 
@@ -217,6 +219,9 @@ std::vector<std::pair<std::string, portfolio_values_t>> compute_fx_delta(
     risk_factors[0].second = original_value - bump_size;
     tmpmkt.set_risk_factors(risk_factors);
     auto pv_dn = compute_prices(pricers, tmpmkt, fds);
+    risk_factors[0].second = original_value;
+    tmpmkt.set_risk_factors(risk_factors);
+
     fx_delta.push_back(
         std::make_pair(fx_spot_prefix + risk_ccy,
           std::vector<trade_value_t>(pricers.size())));
