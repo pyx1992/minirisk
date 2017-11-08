@@ -269,12 +269,12 @@ Errors: 2
 ========================
 PV01 bucketed IR.5Y.EUR:
 ========================
-Total:  -15.1799
+Total:  -15.1824
 Errors: 2
 
 ========================
     0: 0
-    1: -15.1799
+    1: -15.1824
     2: Curve IR.DISCOUNT.EUR, DF not available beyond last tenor date 3-8-2027, requested 5-11-2074
     3: Curve IR.DISCOUNT.EUR, DF not available before anchor date 5-8-2017, requested 8-7-2009
 ========================
@@ -282,11 +282,11 @@ Errors: 2
 ========================
 PV01 bucketed IR.5Y.USD:
 ========================
-Total:  -6.19644
+Total:  -6.19747
 Errors: 2
 
 ========================
-    0: -6.19644
+    0: -6.19747
     1: 0
     2: Curve IR.DISCOUNT.EUR, DF not available beyond last tenor date 3-8-2027, requested 5-11-2074
     3: Curve IR.DISCOUNT.EUR, DF not available before anchor date 5-8-2017, requested 8-7-2009
